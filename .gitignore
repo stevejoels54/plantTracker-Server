@@ -1,0 +1,32 @@
+# db. sqlite3
+db.sqlite3
+
+# migrations
+migrations/
+
+# static files
+staticfiles/
+
+# media files
+media/
+
+# local settings
+local_settings.py
+
+# virtualenv
+venv/
+.env
+.venv
+
+# pycharm
+.idea/
+
+# vscode
+.vscode/
+
+# celery
+celerybeat-schedule
+
+# pycache
+__pycache__/
+*.py[cod]
