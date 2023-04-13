@@ -8,6 +8,9 @@ from .models import Reading, Notification
 from .serializers import ReadingSerializer, NotificationSerializer
 from .notifications import check_temperature, check_light, check_moisture
 from datetime import datetime, timedelta
+from django.db.models import Avg
+from django.utils import timezone
+from django.conf import settings
 
 # Create your views here.
 
@@ -111,7 +114,7 @@ def notifications(request):
 def notifications_by_device(request, device_id):
     if request.method == 'GET':
         notifications = Notification.objects.filter(
-            device_id=device_id).order_by('-notification_time')
+            device_id=device_id).order_by('-notification_time')[:10]
         serializer = NotificationSerializer(notifications, many=True)
         return JsonResponse(serializer.data, safe=False)
 
@@ -122,3 +125,83 @@ def notifications_by_device(request, device_id):
             serializer.save()
             return JsonResponse(serializer.data, status=201)
         return JsonResponse(serializer.errors, status=400)
+
+
+@csrf_exempt
+def get_summary(request, device_id):
+
+    # Disable time zone support
+    settings.USE_TZ = False
+
+    # Filter out the daySummary data for the given device_id
+    now = timezone.now()
+    day_summary_data = Reading.objects.filter(device_id=device_id,
+                                              reading_time__date=now.date())
+
+    # Calculate morning, afternoon, and evening summaries for daySummary
+    morning_summary = day_summary_data.filter(
+        reading_time__time__range=("00:00", "11:59")).aggregate(
+            temperature=Avg('temperature'),
+            light=Avg('light'),
+            moisture=Avg('moisture'))
+    afternoon_summary = day_summary_data.filter(
+        reading_time__time__range=("12:00", "17:59")).aggregate(
+            temperature=Avg('temperature'),
+            light=Avg('light'),
+            moisture=Avg('moisture'))
+    evening_summary = day_summary_data.filter(
+        reading_time__time__range=("18:00", "23:59")).aggregate(
+            temperature=Avg('temperature'),
+            light=Avg('light'),
+            moisture=Avg('moisture'))
+
+    # Calculate weekSummary
+    week_start_date = now.date() - timedelta(days=7)
+    week_summary_data = Reading.objects.filter(
+        device_id=device_id, reading_time__gte=week_start_date)
+    week_summary = week_summary_data.aggregate(temperature=Avg('temperature'),
+                                               light=Avg('light'),
+                                               moisture=Avg('moisture'))
+
+    # Calculate monthSummary
+    month_start_date = now.date() - timedelta(days=30)
+    month_summary_data = Reading.objects.filter(
+        device_id=device_id, reading_time__gte=month_start_date)
+    month_summary = month_summary_data.aggregate(
+        temperature=Avg('temperature'),
+        light=Avg('light'),
+        moisture=Avg('moisture'))
+
+    # Create the summary object with daySummary, weekSummary, and monthSummary
+    summary = {
+        'daySummary': {
+            'morning': {
+                'temperature': morning_summary['temperature'],
+                'light': morning_summary['light'],
+                'moisture': morning_summary['moisture'],
+            },
+            'afternoon': {
+                'temperature': afternoon_summary['temperature'],
+                'light': afternoon_summary['light'],
+                'moisture': afternoon_summary['moisture'],
+            },
+            'evening': {
+                'temperature': evening_summary['temperature'],
+                'light': evening_summary['light'],
+                'moisture': evening_summary['moisture'],
+            },
+        },
+        'weekSummary': {
+            'temperature': week_summary['temperature'],
+            'light': week_summary['light'],
+            'moisture': week_summary['moisture'],
+        },
+        'monthSummary': {
+            'temperature': month_summary['temperature'],
+            'light': month_summary['light'],
+            'moisture': month_summary['moisture'],
+        },
+    }
+
+    # Return the summary object as a JSON response
+    return JsonResponse(summary)

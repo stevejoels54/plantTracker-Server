@@ -14,5 +14,6 @@ urlpatterns = [
     path('notifications', views.notifications, name='notifications'),
     path('notifications_by_device/<int:device_id>',
          views.notifications_by_device,
-         name='notifications_by_device')
+         name='notifications_by_device'),
+    path('summary/<int:device_id>', views.get_summary, name='summary')
 ]
