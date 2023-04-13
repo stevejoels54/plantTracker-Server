@@ -11,6 +11,8 @@ from datetime import datetime, timedelta
 from django.db.models import Avg
 from django.utils import timezone
 from django.conf import settings
+import csv
+from devices.models import Device
 
 # Create your views here.
 
@@ -205,3 +207,43 @@ def get_summary(request, device_id):
 
     # Return the summary object as a JSON response
     return JsonResponse(summary)
+
+
+@csrf_exempt
+def export_data(request, device_id):
+    # Retrieve data from the Reading model for the given device_id
+    device_data = Reading.objects.filter(device_id=device_id)
+
+    # Create the HttpResponse object with appropriate headers for a CSV file
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="device_data.csv"'
+
+    # Create a CSV writer and write the header row
+    writer = csv.writer(response)
+    writer.writerow([
+        'reading_id', 'device_id', 'reading_time', 'temperature', 'light',
+        'moisture'
+    ])
+
+    # Write data rows to the CSV file
+    for data in device_data:
+        writer.writerow([
+            data.reading_id, data.device_id.device_id, data.reading_time,
+            data.temperature, data.light, data.moisture
+        ])
+
+    return response
+
+
+@csrf_exempt
+def device_data(request, device_id):
+    # Retrieve the device object
+    device = Device.objects.get(device_id=device_id)
+
+    # Retrieve all the readings associated with the device and sort them by most recent
+    readings = Reading.objects.filter(
+        device_id=device).order_by('-reading_time')
+
+    # Render the data in a template
+    context = {'device': device, 'readings': readings}
+    return render(request, 'device_data.html', context)

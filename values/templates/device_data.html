@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+{% load static %} {% load bootstrap_icons %}
+<html>
+  <head>
+    <title>Device Data</title>
+    <link rel="icon" type="image/png" href="{% static 'favicon.png' %}" />
+    <!-- Include Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <!-- Load Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6vXmFcJlSAwiGgFAW/dAiS6vXmFcJlSAwiGgFAW/dAiS6vXmFcJlSAwiGgFAW8M"
+      crossorigin="anonymous"
+    />
+    <style>
+      body {
+        background-color: #4c7352;
+        color: #e4e4b2;
+      }
+      .navbar-brand img {
+        max-height: 30px;
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <a class="navbar-brand" href="#">
+        <img src="{% static 'logo.png' %}" alt="Logo" />
+        plantTracker
+      </a>
+      <a href="/export/{{ device.device_id }}" class="btn btn-light ml-auto">
+        {% bs_icon 'download' %} Export
+      </a>
+    </nav>
+    <div class="container mt-5">
+      <h1>Device Data</h1>
+      <h2>Device: {{ device.name }}</h2>
+      {% if readings %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Reading Time</th>
+            <th scope="col">Temperature</th>
+            <th scope="col">Light</th>
+            <th scope="col">Moisture</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for reading in readings %}
+          <tr>
+            <td>{{ reading.reading_time }}</td>
+            <td>{{ reading.temperature }}</td>
+            <td>{{ reading.light }}</td>
+            <td>{{ reading.moisture }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>No data available.</p>
+      {% endif %}
+    </div>
+    <!-- Include Bootstrap JS and Font Awesome Icons -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://kit.fontawesome.com/your_font_awesome_kit.js"></script>
+  </body>
+</html>
