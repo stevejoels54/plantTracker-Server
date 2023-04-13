@@ -114,7 +114,7 @@ def notifications(request):
 def notifications_by_device(request, device_id):
     if request.method == 'GET':
         notifications = Notification.objects.filter(
-            device_id=device_id).order_by('-notification_time')[:10]
+            device_id=device_id).order_by('-notification_time')[:9]
         serializer = NotificationSerializer(notifications, many=True)
         return JsonResponse(serializer.data, safe=False)
 
