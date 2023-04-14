@@ -28,12 +28,12 @@ def check_temperature(device, temperature):
 
 
 def check_light(device, light):
-    if light > 20000:
+    if light > 100:
         create_notification(device, 'High light', 'Light is too high')
-    elif light >= 5000:
+    elif light >= 50:
         create_notification(device, 'Moderate light',
                             'Light is at a moderate level')
-    elif light >= 1000:
+    elif light >= 10:
         create_notification(device, 'Low light', 'Light is at a low level')
     else:
         create_notification(device, 'Normal light',
